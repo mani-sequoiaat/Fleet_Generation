@@ -1,0 +1,6 @@
+{{ sfleet_data.length }}
+{%- if sfleet_data.length > 0 -%}
+{% for sf in sfleet_data %}
+{{ sf.brand }},{{ sf.ody_vehicle_id_number }},{{ sf.license_plate_number }},{{ sf.license_plate_state }},{{ sf.year }},{{ sf.make }},{{ sf.model }},{{ sf.color }},{{ sf.vin }},{{ sf.location_group }},{{ sf.location_code }},{{ sf.location_name }},{{ sf.location_1 }},{{ sf.location_2 }},{{ sf.city }},{{ sf.state }},{{ sf.zip }},{{ sf.phone_number }},{{ sf.vehicle_erac }}
+{%- endfor %}
+{%- endif %}

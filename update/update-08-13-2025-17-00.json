@@ -1,0 +1,92 @@
+[
+  {
+    "license_plate_number": "ADL0081",
+    "license_plate_state": "NJ",
+    "year": "2026",
+    "make": "Subaru",
+    "model": "Jetta",
+    "color": "alpha",
+    "vin": "N1BHJ7U6CDCL91049"
+  },
+  {
+    "license_plate_number": "ADL0082",
+    "license_plate_state": "NM",
+    "year": "2023",
+    "make": "Vauxhall",
+    "model": "Explorer",
+    "color": "bravo",
+    "vin": "4HR2S48KARW764818"
+  },
+  {
+    "license_plate_number": "ADL0083",
+    "license_plate_state": "NY",
+    "year": "2025",
+    "make": "Land Rover",
+    "model": "Civic",
+    "color": "charlie",
+    "vin": "W318D6M3G7KY48601"
+  },
+  {
+    "license_plate_number": "ADL0084",
+    "license_plate_state": "NC",
+    "year": "2025",
+    "make": "Citroën",
+    "model": "PT Cruiser",
+    "color": "delta",
+    "vin": "NN1K4R1DU0M068526"
+  },
+  {
+    "license_plate_number": "ADL0085",
+    "license_plate_state": "ND",
+    "year": "2024",
+    "make": "Chrysler",
+    "model": "F-150",
+    "color": "echo",
+    "vin": "2M6KMJGN3SRC34890"
+  },
+  {
+    "license_plate_number": "ADL0086",
+    "license_plate_state": "OH",
+    "year": "2024",
+    "make": "Ford",
+    "model": "Spyder",
+    "color": "foxtrot",
+    "vin": "JKUEURJX1DRH47395"
+  },
+  {
+    "license_plate_number": "ADL0087",
+    "license_plate_state": "OK",
+    "year": "2026",
+    "make": "Nissan",
+    "model": "Escalade",
+    "color": "golf",
+    "vin": "SP37ASN58KJJ50665"
+  },
+  {
+    "license_plate_number": "ADL0088",
+    "license_plate_state": "OR",
+    "year": "2023",
+    "make": "Mazda",
+    "model": "Land Cruiser",
+    "color": "hotel",
+    "vin": "FWXTG7DYU1WT77977"
+  },
+  {
+    "license_plate_number": "ADL0089",
+    "license_plate_state": "PA",
+    "year": "2025",
+    "make": "Fiat",
+    "model": "Grand Cherokee",
+    "color": "india",
+    "vin": "LK3W43L11KNR60081"
+  },
+  {
+    "license_plate_number": "ADL0090",
+    "license_plate_state": "RI",
+    "year": "2026",
+    "make": "Skoda",
+    "model": "Colorado",
+    "color": "juliet",
+    "vin": "5AJV3X797KA225551"
+  }
+]

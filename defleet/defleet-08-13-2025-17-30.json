@@ -1,0 +1,92 @@
+[
+  {
+    "license_plate_number": "ADL0091",
+    "license_plate_state": "SC",
+    "year": "2024",
+    "make": "Vauxhall",
+    "model": "Prius",
+    "color": "yellow",
+    "vin": "RXB6PP388WB003113"
+  },
+  {
+    "license_plate_number": "ADL0092",
+    "license_plate_state": "SD",
+    "year": "2025",
+    "make": "Suzuki",
+    "model": "Golf",
+    "color": "white",
+    "vin": "JXX86H7H30BM29280"
+  },
+  {
+    "license_plate_number": "ADL0093",
+    "license_plate_state": "TN",
+    "year": "2023",
+    "make": "BMW",
+    "model": "Durango",
+    "color": "violet",
+    "vin": "WVRSLSE23NTR78169"
+  },
+  {
+    "license_plate_number": "ADL0094",
+    "license_plate_state": "TX",
+    "year": "2024",
+    "make": "Mitsubishi",
+    "model": "XTS",
+    "color": "indigo",
+    "vin": "FC3LC2V5WPS102671"
+  },
+  {
+    "license_plate_number": "ADL0095",
+    "license_plate_state": "UT",
+    "year": "2026",
+    "make": "Dodge",
+    "model": "Durango",
+    "color": "pink",
+    "vin": "3LYUEX6S04N342873"
+  },
+  {
+    "license_plate_number": "ADL0096",
+    "license_plate_state": "VT",
+    "year": "2026",
+    "make": "Bugatti",
+    "model": "Impala",
+    "color": "blue",
+    "vin": "MCE9JSNBEFM580447"
+  },
+  {
+    "license_plate_number": "ADL0097",
+    "license_plate_state": "VA",
+    "year": "2023",
+    "make": "Mazda",
+    "model": "Accord",
+    "color": "azure",
+    "vin": "CKNFV8YJ8JU501252"
+  },
+  {
+    "license_plate_number": "ADL0098",
+    "license_plate_state": "WA",
+    "year": "2026",
+    "make": "Maruti",
+    "model": "Golf",
+    "color": "salmon",
+    "vin": "05WXZL7TTAG200861"
+  },
+  {
+    "license_plate_number": "ADL0099",
+    "license_plate_state": "WV",
+    "year": "2025",
+    "make": "Bentley",
+    "model": "A4",
+    "color": "cyan",
+    "vin": "PAWZWVKLWVNR90125"
+  },
+  {
+    "license_plate_number": "ADL0100",
+    "license_plate_state": "WI",
+    "year": "2024",
+    "make": "Volkswagen",
+    "model": "Camaro",
+    "color": "silver",
+    "vin": "LRTAEF0CL4V859284"
+  }
+]
