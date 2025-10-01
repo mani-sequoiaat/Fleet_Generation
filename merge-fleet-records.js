@@ -16,6 +16,59 @@ const usStates      = require('./data/usStates');
 
 const sftp = new Client();
 
+// --- Sequence Helpers ---
+const seqFile = path.join(__dirname, 'sequence.json');
+
+function prefixToNumber(prefix) {
+  let num = 0;
+  for (let i = 0; i < prefix.length; i++) {
+    num = num * 26 + (prefix.charCodeAt(i) - 65);
+  }
+  return num;
+}
+
+function numberToPrefix(num) {
+  let chars = [];
+  for (let i = 0; i < 3; i++) {
+    chars.unshift(String.fromCharCode((num % 26) + 65));
+    num = Math.floor(num / 26);
+  }
+  return chars.join('');
+}
+
+// Load last prefix or default to ADT
+let lastPrefix = 'ADT';
+if (fs.existsSync(seqFile)) {
+  try {
+    const data = JSON.parse(fs.readFileSync(seqFile, 'utf-8'));
+    if (data.lastPrefix) lastPrefix = data.lastPrefix;
+  } catch (err) {
+    console.warn('Could not read sequence file, using default ADT');
+  }
+}
+
+// Increment sequence
+const currentNum = prefixToNumber(lastPrefix);
+const nextNum = currentNum + 1;
+const dailyPrefix = numberToPrefix(nextNum);
+
+// Save for next run
+fs.writeFileSync(seqFile, JSON.stringify({ lastPrefix: dailyPrefix }), 'utf-8');
+
+// --- ID Generation using daily prefix ---
+function generateOdyVehicleId(i) {
+  return `ODY-${dailyPrefix}${String(i).padStart(4, '0')}`;
+}
+
+function generateEracVehicleId(i) {
+  return `ERAC-${dailyPrefix}${String(i).padStart(4, '0')}`;
+}
+
+function generateRandomLicensePlate(i) {
+  return `${dailyPrefix}${String(i).padStart(4, '0')}`;
+}
+
+
 // Index mapping for both defleet and update JSONs
 const defleetIdx = {
   license_plate_number: 2,
@@ -50,17 +103,35 @@ const errorColumnMapping = {
   vehicle_erac: 18
 };
 
+// Column mapping for s_fleet
+const s_fleetColumnMapping = {
+  brand: 0,
+  ody_vehicle_id_number: 1,
+  license_plate_number: 2,
+  license_plate_state: 3,
+  year: 4,
+  make: 5,
+  model: 6,
+  color: 7,
+  vin: 8,
+  vehicle_erac: 18
+};
+
 
 // Ten fixed words used to overwrite the `color` field in the update JSON
 const commonWords = ['delta'];
 
 // Output directories for JSON files
-const defleetOutputDir   = path.join(__dirname, 'defleet');
-const updateOutputDir    = path.join(__dirname, 'update');
-const errorOutputDir     = path.join(__dirname, 'error_records');
-const infleetOutputDir   = path.join(__dirname, 'infleet_records');
-const fleetOutputDir     = path.join(__dirname, 'fleet_records');
-const historyOutputDir   = path.join(__dirname, 'history_records');
+const jsonBaseDir = path.join(__dirname, '../json');  
+
+const sFleetOutputDir   = path.join(jsonBaseDir, 's_fleet');
+const defleetOutputDir  = path.join(jsonBaseDir, 'defleet');
+const updateOutputDir   = path.join(jsonBaseDir, 'update');
+const errorOutputDir    = path.join(jsonBaseDir, 'error_records');
+const infleetOutputDir  = path.join(jsonBaseDir, 'infleet_records');
+const fleetOutputDir    = path.join(jsonBaseDir, 'fleet_records');
+const historyOutputDir  = path.join(jsonBaseDir, 'history_records');
+
 
 // Splits CSV text into an array of trimmed lines, dropping blank lines and pure-number lines.
 function parseCsvRecords(text) {
@@ -70,21 +141,6 @@ function parseCsvRecords(text) {
     .filter(line => line !== '' && !/^[0-9]+$/.test(line));
 }
 
-// Generate IDs and plates
-function generateOdyVehicleId(i) {
-  const plate = faker.helpers.arrayElement(['ADN']);
-  return `ODY-${plate}${String(i).padStart(4, '0')}`;
-}
-
-function generateEracVehicleId(i) {
-  const plate = faker.helpers.arrayElement(['ADN']);
-  return `ERAC-${plate}${String(i).padStart(4, '0')}`;
-}
-
-function generateRandomLicensePlate(i) {
-  const plate = faker.helpers.arrayElement(['ADN']);
-  return `${plate}${String(i).padStart(4, '0')}`;
-}
 
 // Generate `count` rows of synthetic fleet data.
 function generateSFleetData(count) {
@@ -109,7 +165,8 @@ function generateSFleetData(count) {
       state: faker.helpers.arrayElement(usStates),
       zip: faker.number.int({ min:30000, max:39999 }),
       phone_number: faker.phone.number({ style: 'national' }),
-      vehicle_erac: generateEracVehicleId(i)
+      vehicle_erac: generateEracVehicleId(i),
+      transponder_number: ""
     });
   }
 
@@ -150,47 +207,44 @@ async function downloadYesterdayFile(localPath, fmt) {
 function saveJson(folder, name, ts, data) {
   fs.mkdirSync(folder, { recursive: true });
   fs.writeFileSync(
-    path.join(folder, `${name}-${ts}.json`),
+    path.join(folder, `${name}.json`),
     JSON.stringify(data, null, 2),
     'utf-8'
   );
 }
 
 async function generateAndMerge(count, fmt) {
-  // 1. Render today's CSV
+  console.log(' Step 1: Generate synthetic fleet data');
   const sfleet_data = generateSFleetData(count);
-  const tpl         = fs.readFileSync(path.join(__dirname,'fleettemplete.liquid'),'utf-8');
-  const todayCsv    = await new Liquid({ greedy: true })
-    .parseAndRender(tpl, { sfleet_data });
 
-  // 2. Save raw today
+  console.log(' Step 2: Render today\'s CSV from Liquid template');
+  const tpl      = fs.readFileSync(path.join(__dirname,'fleettemplete.liquid'),'utf-8');
+  const todayCsv = await new Liquid({ greedy: true }).parseAndRender(tpl, { sfleet_data });
+
+  console.log(' Step 3: Save today\'s raw CSV');
   const ts       = DateTime.now().toFormat('MM-dd-yyyy-HH-mm');
   const fileName = `em-fleet-${ts}.${fmt}`;
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(path.join(outputDir, fileName), todayCsv, 'utf-8');
 
-  // 3. Download yesterday's file
+  console.log(' Step 4: Download yesterday\'s file from SFTP');
   const tmpYest   = path.join(__dirname, `temp-yesterday.${fmt}`);
   const yestLocal = await downloadYesterdayFile(tmpYest, fmt);
 
-  // 4. Load & clean yesterday’s data
+  console.log(' Step 5: Load and clean yesterday\'s data');
   let oldRecords = [];
   if (yestLocal && fs.existsSync(yestLocal)) {
     const raw = fs.readFileSync(yestLocal,'utf-8')
       .split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
     raw.shift();              // drop old count line
-    if (raw.length >= 2) {
-      raw.splice(-2, 2);      // delete last 2 error rows
-    }
+    if (raw.length >= 2) raw.splice(-2, 2); // remove last 2 error rows
     oldRecords = raw;
     fs.unlinkSync(tmpYest);
   }
 
-  // 5. Defleet
+  console.log(' Step 6: Prepare defleet JSON');
   let defleetBatch = [];
-  if (oldRecords.length >= 10) {
-    defleetBatch = oldRecords.splice(-10, 10);
-  }
+  if (oldRecords.length >= 10) defleetBatch = oldRecords.splice(-10, 10);
   const defleetData = defleetBatch.map(line => {
     const cols = line.split(',');
     return {
@@ -203,9 +257,12 @@ async function generateAndMerge(count, fmt) {
       vin:                  cols[defleetIdx.vin]
     };
   });
-  if (defleetData.length) saveJson(defleetOutputDir, 'defleet', ts, defleetData);
+  if (defleetData.length) {
+    saveJson(defleetOutputDir, 'defleet', ts, defleetData);
+    // console.log(`    Defleet JSON saved (${defleetData.length} records)`);
+  }
 
-  // 6. Update
+  console.log(' Step 7: Prepare update JSON');
   const updateStart = oldRecords.length - 10;
   const updateBatch = oldRecords.slice(updateStart);
   const updateData  = updateBatch.map((line, i) => {
@@ -220,20 +277,30 @@ async function generateAndMerge(count, fmt) {
       vin:                  cols[defleetIdx.vin]
     };
   });
-  if (updateData.length) saveJson(updateOutputDir, 'update', ts, updateData);
+  if (updateData.length) 
+    saveJson(updateOutputDir, 'update', ts, updateData);
+    
 
-  // Apply same color override in CSV
-  for (let i = 0; i < updateBatch.length; i++) {
-    const idx = updateStart + i;
-    const cols = oldRecords[idx].split(',');
-    cols[defleetIdx.color] = commonWords[i % commonWords.length];
-    oldRecords[idx] = cols.join(',');
-  }
-
-  // 7. Parse today's new records
+  console.log(' Step 8: Parse today\'s new records');
   const newRecords = parseCsvRecords(todayCsv);
 
-  // 8. Generate error + infleet + fleet JSONs
+  //  Apply updates to oldRecords before merging
+  const updateMap = new Map(updateData.map(r => [`${r.license_plate_number}_${r.license_plate_state}`, r]));
+  oldRecords = oldRecords.map(line => {
+    const cols = line.split(',');
+    const key = `${cols[defleetIdx.license_plate_number]}_${cols[defleetIdx.license_plate_state]}`;
+    if (updateMap.has(key)) {
+      const upd = updateMap.get(key);
+      cols[defleetIdx.color] = upd.color;
+      cols[defleetIdx.vin]   = upd.vin;
+      cols[defleetIdx.year]  = upd.year;
+      cols[defleetIdx.make]  = upd.make;
+      cols[defleetIdx.model] = upd.model;
+    }
+    return cols.join(',');
+  });
+
+  console.log(' Step 9: Generate error, infleet, and fleet JSONs');
   const errorRecords = newRecords.slice(-2).map(line => {
     const cols = line.split(',');
     const obj = {};
@@ -243,7 +310,6 @@ async function generateAndMerge(count, fmt) {
     return obj;
   });
 
-  // INFLEET = all new records except last two
   const infleetRecords = newRecords.slice(0, -2).map(line => {
     const cols = line.split(',');
     return {
@@ -257,21 +323,28 @@ async function generateAndMerge(count, fmt) {
     };
   });
 
-  // FLEET = only LPN + LPS from infleet
-  const fleetRecords = infleetRecords.map(r => ({
-    license_plate_number: r.license_plate_number,
-    license_plate_state:  r.license_plate_state
-  }));
-
   saveJson(errorOutputDir, 'error_records', ts, errorRecords);
   saveJson(infleetOutputDir, 'infleet_records', ts, infleetRecords);
-  saveJson(fleetOutputDir, 'fleet_records', ts, fleetRecords);
+  saveJson(fleetOutputDir, 'fleet_records', ts, infleetRecords.map(r => ({
+    license_plate_number: r.license_plate_number,
+    license_plate_state:  r.license_plate_state
+  })));
 
-  // 9. History = infleet + update
-  const historyRecords = [...infleetRecords, ...updateData];
-  saveJson(historyOutputDir, 'history_records', ts, historyRecords);
+  console.log(' Step 10: Save history JSON');
+  saveJson(historyOutputDir, 'history_records', ts, [...infleetRecords, ...updateData]);
 
-  // 10. Merge CSV
+  console.log(' Step 11: Save s_fleet JSON');
+  const sFleetRecords = [...oldRecords, ...newRecords.slice(0, -2)].map(line => {
+    const cols = line.split(',');
+    const obj = {};
+    for (const [key, idx] of Object.entries(s_fleetColumnMapping)) {
+      obj[key] = cols[idx] || '';
+    }
+    return obj;
+  });
+  saveJson(sFleetOutputDir, 's_fleet', ts, sFleetRecords);
+
+  console.log(' Step 12: Generated a full fleet file');
   const total  = oldRecords.length + newRecords.length;
   const merged = [ total.toString(), ...oldRecords, ...newRecords ];
   fs.mkdirSync(mergedOutputDir, { recursive: true });
@@ -281,7 +354,7 @@ async function generateAndMerge(count, fmt) {
     'utf-8'
   );
 
-  console.log('✅ All CSV and JSON files written successfully.');
+  console.log(' CSV and JSON files generated successfully.');
 }
 
 // CLI Entrypoint

@@ -1,9 +1,9 @@
 // config/credentials.js
 module.exports = {
   sftpConfig: {
-    host: '54.184.197.22',
+    host: '20.169.171.131',
     port: 22,
-    username: 'uptech-sftp-qa-user',
-    password: 'Uptech$!qa25!'
+    username: 'sftp-qa-user-em',
+    password: 'wC*(cu_yQBZ7WHi!'
   }
 };
